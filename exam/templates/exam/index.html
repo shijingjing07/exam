@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/bootstrap-3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/bk-icon-2.0/iconfont.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css/bk.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css-pro/bk.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/jstree-3.1.1/dist/themes/default/style.min.css" rel="stylesheet"/>
+    <style>
+        html,
+        body {
+            background: #fafafa;
+            overflow: hidden;
+        }
+
+        .bk-layout {
+            min-height: 500px;
+        }
+
+        .page-content {
+            padding: 25px;
+            flex: 1;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .bk-sidebar {
+            width: 252px;
+            border-right: solid 1px #e6e6e6;
+            background: #ffffff;
+            color: #2f2e2e;
+        }
+
+        .bk-sidebar li > a {
+            display: inline-block;
+        }
+
+        .bk-sidebar .open > a {
+            background: #ffffff;
+        }
+
+        .bk-table.has-table-bordered > thead > tr > th {
+            border-top: solid 1px #e6e6e6 !important;
+        }
+
+        .bk-layout {
+            min-width: 1200px;
+        }
+
+        .bk-sidebar li>a {
+            padding: 0;
+        }
+
+        #topo_tree {
+            padding-top: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="nav king-horizontal-nav10" id="horizontal_nav_demo10">
+    <div class="navbar-header">
+        <a href="#" class="navbar-brand">
+            <img src="https://magicbox.bk.tencent.com/static_api/v3/bk/images/logo.png" class="logo">
+        </a>
+    </div>
+    <ul class="nav navbar-nav">
+        <li class="active"><a href="{{SITE_URL}}">进程查询</a></li>
+        <li class="navslip" id="navslip" style="width: 84px; left: 0px;"></li>
+    </ul>
+    <div class="navbar-header pull-right">
+        <ul class="nav">
+            <li class="user-info">
+                <a href="">{{request.user.username}}</a>
+            </li>
+        </ul>
+    </div>
+</div>
+    <div class="bk-layout bk-layout-has-sidebar" style="height:calc(100% - 60px)">
+        <div class="bk-sidebar">
+            <div class="nav-list mt25">
+                <ul>
+                    <li class="pureLink pl10">
+                        选择业务
+                    </li>
+                    <li>
+                        <div class="bk-form-content" style="padding: 10px;">
+                            <select name="" id="bk_biz_id" class="bk-form-select" style="width:100%;" placeholder="请选择">
+                                <option value="">请选择</option>
+                                {% for item in biz_list %}
+                                    <option value="{{ item.bk_biz_id }}">{{ item.bk_biz_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </li>
+                    <li class="pureLink pl10">
+                        选择拓扑
+                    </li>
+                </ul>
+            </div>
+            <div id="topo_tree">
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="bk-panel mb20">
+                <div class="bk-panel-body p25">
+                    <form class="bk-form">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="bk-form-item mb20">
+                                    <label class="bk-label pr15" style="width:80px;">主机IP</label>
+                                    <div class="bk-form-content" style="margin-left:80px;">
+                                        <textarea class="bk-form-textarea" id="ipList" placeholder="多个IP换行分割"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="bk-form-item mb20">
+                                    <label class="bk-label pr15" style="width:80px;">进程</label>
+                                    <div class="bk-form-content" style="margin-left:80px;">
+                                        <input type="text" class="bk-form-input" value="python" id="processName" placeholder="请输入进程名称，如'python'" style="width:100%;">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="bk-form-item">
+                                    <label class="bk-label pr15" style="width:80px;"></label>
+                                    <div class="bk-form-content-x tl">
+                                        <button class="bk-button bk-success" id="searchBtn">立即搜索</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="bk-panel">
+                <div class="bk-panel-header p25" role="tab">
+                    <table class="bk-table has-table-bordered has-table-hover" id="processTable">
+                        <thead>
+                            <tr>
+                                <th style="width:80px;">序号</th>
+                                <th style="width:20%;">业务ID</th>
+                                <th>IP</th>
+                                <th>进程关键字</th>
+                                <th>数量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jquery js  -->
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/jquery-1.10.2.min.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/jquery/jquery.json-2.3.min.js"></script>
+    <!-- 处理jquery兼容问题，jQuery Migrate（迁移）插件包含了1.6.4以来存在但1.9已不支持所有API -->
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/jquery-migrate-1.2.1.min.js"></script>
+    <!-- bootstrap js  -->
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <!-- jquery ui js-->
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/jquery-ui-1.11.0.custom/jquery-ui.min.js"></script>
+    <!-- 平台 js  -->
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/bk/js/bk.js"></script>
+
+    <!-- 这个是全局配置，如果需要在js中使用app_code和site_url,则这个javascript片段一定要保留 -->
+    <script type="text/javascript">
+        var site_url = "{{ SITE_URL }}";			// app的url前缀,在ajax调用的时候，应该加上该前缀
+        var static_url = "{{STATIC_URL}}";
+    </script>
+
+    <!--统计js  勿删-->
+    <script src="https://magicbox.bk.tencent.com/static_api/analysis.js?v={{ STATIC_VERSION }}"></script>
+    <script src="{{STATIC_URL}}js/csrftoken.js?v={{ STATIC_VERSION }}"></script>
+{#    <script src="{{STATIC_URL}}js/settings.js?v={{ STATIC_VERSION }}"></script>#}
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/jstree-3.1.1/dist/jstree.min.js"></script>
+
+    <script type="text/javascript">
+
+        (function () {
+            // javascript代码中直接导入数据
+            // https://www.jstree.com/docs/json/
+            $('#topo_tree').hide();
+            $('#searchBtn').click(function() {
+                const ipList = $('#ipList').val() || '';
+                const bk_biz_id = $("#bk_biz_id").val();
+                if(!ipList) {
+                    alert('请输入主机IP');
+                    return false;
+                }
+                if(!bk_biz_id) {
+                    alert('请选择业务');
+                    return false;
+                }
+                const params = {bk_biz_id: bk_biz_id,
+                            script_params: $("#processName").val(),
+                            ip_list: JSON.stringify(ipList.split('\n').join(','))}
+                $.ajax({
+                    url: site_url + 'searchProcess',
+                    type: 'GET',
+                    data: params,
+                    beforeSend: function() {
+                        $('#searchBtn').removeClass('is-loading is-disabled').addClass('is-loading disabled');
+                    },
+                    success: function(res) {
+                        console.log(res)
+                        let _html = '';
+                        res.data.forEach((item, i) => {
+                            _html += `<tr><td>${i+1}</td><td>${item.bk_biz_id}</td><td>${item.ip}</td><td>${params.script_params}</td><td>${item.process_count}</td><td><a href="javascript:void(0);" class="king-btn king-btn-mini" onclick="processDetail(this);">进程详情</a></td>`
+                        })
+                        $('#processTable tbody').html(_html);
+                    },
+                    complete: function() {
+                        $('#searchBtn').removeClass('is-loading is-disabled');
+                    }
+                });
+                return false;
+            });
+
+            $("#bk_biz_id").change(function (e) {
+                reset()
+                // TODO: 请求后台，查询业务下的拓扑
+                var data = [
+                        {
+                            "id": 1, "text": "中国",
+                            "children": [
+                                {
+                                    "id": 12, "text": "广西区"
+                                },
+                                {
+                                    "id": 13, "text": "广东区",
+                                    "children": [
+                                        {"id": 14, "text": "广州"},
+                                        {"id": 15, "text": "深圳"}
+                                    ]
+                                },
+                            ]
+                        }
+                ];
+                if($(this).val()) {
+                    $.ajax({
+                        url: site_url + 'bizTopo',
+                        type: 'GET',
+                        data: {
+                            bk_biz_id: $(this).val()
+                        },
+                        success: function (res) {
+                            console.log(res)
+                            $('#topo_tree').jstree(true).settings.core.data = res.data;
+                            $('#topo_tree').jstree(true).refresh();
+                        }
+                    })
+                    $('#topo_tree').show();
+                } else {
+                    $('#topo_tree').hide();
+                }
+            });
+
+            $('#topo_tree').jstree({
+                'core': {
+                    "themes": {
+                        "icons": false,
+                        "variant": "large"//设置节点间距离
+                    },
+                    'animation': false,//取消树列表的显示隐藏运动效果
+                    'data': [],
+                    "multiple": false//是否支持多选
+                },
+                "checkbox": {
+                    "keep_selected_style": false//选中后当前节点是否添加样式
+                },
+                "plugins": ["checkbox"]//是否添加复选框
+            }).on("changed.jstree", function (e, data) {
+                if (data.selected.length) {
+                    console.log(data)
+                     searchHosts(data.selected)
+                }
+            });
+        })();
+
+
+        function processDetail() {
+            window.location.href = site_url + 'detail?ip=172.25.0.7&bk_biz_id=8&process_key=python'
+        }
+
+        function reset() {
+            $("#processName").val('python');
+            $("#ipList").val('');
+        }
+
+        function searchHosts(selected) {
+            let bk_set_id = '', bk_module_id = '';
+            if(selected) {
+                selected.forEach((item, i) => {
+                    const items = item.split('_');
+                    if(items[1] === 'set') {
+                        bk_set_id = items[0]
+                    } else if(items[1] === 'module') {
+                        bk_module_id = items[0]
+                    }
+                })
+            } else {
+                return false;
+            }
+            $.ajax({
+                type: 'GET',
+                url: site_url + 'getHosts/',
+                data: {
+                    'bk_biz_id': $('#bk_biz_id').val(),
+                    'bk_set_id': bk_set_id,
+                    'bk_module_id': bk_module_id,
+                },
+                success: function (res) {
+                    renderHostTemplate(res.data)
+                }
+            });
+        }
+
+
+        function renderHostTemplate(hostData) {
+            let _ips = "";
+            for (let i = 0; i < hostData.length; i++) {
+                _ips += hostData[i]['host']['bk_host_innerip'] + '\n';
+            }
+            $('#ipList').val(_ips);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>详情</title>
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/bootstrap-3.3.4/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css/bk.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css-pro/bk.css" rel="stylesheet">
+    <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/daterangepicker-2.0.5/daterangepicker.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            background: #fafafa;
+            overflow: hidden;
+        }
+
+        .bk-layout {
+            min-height: 500px;
+        }
+
+        .page-content {
+            padding: 25px;
+            flex: 1;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .bk-sidebar {
+            width: 252px;
+            border-right: solid 1px #e6e6e6;
+            background: #ffffff;
+            color: #2f2e2e;
+        }
+
+        .bk-sidebar li > a {
+            display: inline-block;
+        }
+
+        .bk-sidebar .open > a {
+            background: #ffffff;
+        }
+
+        .bk-table.has-table-bordered > thead > tr > th {
+            border-top: solid 1px #e6e6e6 !important;
+        }
+
+        .bk-layout {
+            min-width: 1200px;
+        }
+
+        .bk-sidebar li > a {
+            padding: 0;
+        }
+
+        #plugin11_demo2 {
+            padding-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="nav king-horizontal-nav10" id="horizontal_nav_demo10">
+    <div class="navbar-header">
+        <a href="#" class="navbar-brand">
+            <img src="https://magicbox.bk.tencent.com/static_api/v3/bk/images/logo.png" class="logo">
+        </a>
+    </div>
+    <ul class="nav navbar-nav">
+        <li class="active"><a href="{{SITE_URL}}">主机查询</a></li>
+        <li class=""><a href="{{SITE_URL}}machineroom">机房管理</a></li>
+        <li class=""><a href="{{SITE_URL}}process">进程查询</a></li>
+        <li class=""><a href="{{SITE_URL}}statistics">图形</a></li>
+    </ul>
+    <div class="navbar-header pull-right">
+        <ul class="nav">
+            <li class="user-info">
+                <a href="">{{request.user.username}}</a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="bk-layout bk-layout-has-sidebar" style="height:calc(100% - 60px)">
+    <div class="page-content">
+        <!--
+如果没有引用以下文件，请去掉此注释
+<link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css-pro/bk.css" rel="stylesheet">
+<link href="https://magicbox.bk.tencent.com/static_api/v3/assets/bk-icon-2.0/iconfont.css" rel="stylesheet">
+-->
+        <form class="bk-form" style="width:600px;" id="validate_form">
+            <div class="bk-form-item">
+                <label class="bk-label" style="width:150px;">选择业务</label>
+                <div class="bk-form-content" style="margin-left:150px;">
+                    <select name="validation_select" class="bk-form-select" id="searchBiz">
+                        <option value="">全部</option>
+                        {% for item in biz_list %}
+                            <option value="{{ item.bk_biz_id }}">{{ item.bk_biz_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="bk-form-item">
+                <label class="bk-label" style="width:150px;">属主</label>
+                <div class="bk-form-content" style="margin-left:150px;">
+                    <input type="text" class="bk-form-input" placeholder="" id="searchOwner">
+                </div>
+            </div>
+            <div class="bk-form-item">
+                <label class="bk-label" style="width:150px;">创建时间</label>
+                <div class="bk-form-content" style="margin-left:150px;">
+                    <input type="text" class="form-control daterangepicker_demo" id="searchDate" placeholder="选择日期...">
+                </div>
+            </div>
+            <div class="bk-form-item bk-form-action">
+                <div class="bk-form-content" style="margin-left:150px;margin-bottom: 20px">
+                    <a class="bk-button bk-primary" id="submit" title="查询">
+                        <span>查询</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <div class="bk-panel bk-demo">
+            <div class="bk-panel-header">
+                <div class="bk-panel-action">
+                    <a href="javascript:void(0);" onclick="batchBind()" class="bk-button bk-default bk-button-small">分配</a>
+                    <a href="javascript:void(0);" onclick="batchUnbind()"  class="bk-button bk-default bk-button-small">解绑</a>
+                    <a href="javascript:void(0);" onclick="hostExport()"  class="bk-button bk-default bk-button-small">导出</a>
+                </div>
+            </div>
+            <div class="bk-panel-body p0">
+                <table class="bk-table has-thead-bordered">
+                    <thead>
+                    <tr>
+                        <th><input type="checkbox" id="checkall"></th>
+                        <th>业务ID</th>
+                        <th>业务名称</th>
+                        <th>主机名</th>
+                        <th>内网IP</th>
+                        <th>属主</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="hostBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="bk-panel-footer p10">
+                <div class="bk-page bk-compact-page fr" id="pageBody">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="myModal">
+    <!--step1 start-->
+    <div class="modal-dialog" role="document">
+        <div class="modal-content yv-modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">分配用户</h4>
+            </div>
+            <div class="modal-body" id="Main">
+            <form class="bk-form" style="width:500px;" id="validate_form">
+                <div class="bk-form-item">
+                    <label class="bk-label" style="width:150px;">选择部门</label>
+                    <div class="bk-form-content" style="margin-left:150px;">
+                        <select name="validation_select" class="bk-form-select" id="deptSelect">
+                            {% for item in dept_list %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="bk-form-item">
+                    <label class="bk-label" style="width:150px;">用户</label>
+                    <div class="bk-form-content" style="margin-left:150px;">
+                        <select name="validation_select" class="bk-form-select" id="ownerSelect">
+
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="bindCancel" class="btn yv-btn-secondary" data-btn="cancel" data-dismiss="modal"><i class="fa fa-times mr5"></i>取消</button>
+                <button type="button" id="bindSubmit" class="btn yv-btn-primary" data-btn="save"><i class="fa fa-check mr5"></i>确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jquery js  -->
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/jquery-1.10.2.min.js"></script>
+<script src="https://magicbox.bk.tencent.com/static_api/jquery/jquery.json-2.3.min.js"></script>
+<!-- 处理jquery兼容问题，jQuery Migrate（迁移）插件包含了1.6.4以来存在但1.9已不支持所有API -->
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/jquery-migrate-1.2.1.min.js"></script>
+<!-- bootstrap js  -->
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+<!-- jquery ui js-->
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/jquery-ui-1.11.0.custom/jquery-ui.min.js"></script>
+<!-- 平台 js  -->
+<script src="https://magicbox.bk.tencent.com/static_api/v3/bk/js/bk.js"></script>
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/datatables-1.10.7/jquery.dataTables.js"></script>
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/datatables-1.10.7/dataTables.bootstrap.js"></script>
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/daterangepicker-2.0.5/moment.min.js"></script>
+<script src="https://magicbox.bk.tencent.com/static_api/v3/assets/daterangepicker-2.0.5/daterangepicker.js"></script>
+<!-- 这个是全局配置，如果需要在js中使用app_code和site_url,则这个javascript片段一定要保留 -->
+<script type="text/javascript">
+    var site_url = "{{SITE_URL}}";			// app的url前缀,在ajax调用的时候，应该加上该前缀
+    var static_url = "{{STATIC_URL}}";
+</script>
+
+<!--统计js  勿删-->
+<script src="https://magicbox.bk.tencent.com/static_api/analysis.js?v={{ STATIC_VERSION }}"></script>
+<script src="{{STATIC_URL}}js/csrftoken.js?v={{ STATIC_VERSION }}"></script>
+<script src="{{STATIC_URL}}js/settings.js?v={{ STATIC_VERSION }}"></script>
+
+<script type="text/javascript">
+    let hostId = "";
+    const perPage = 10;
+    let curPage = 1;
+    let pageNumber = 1;
+    (function () {
+        $('#searchDate').daterangepicker({
+            locale : {
+                "format" : 'YYYY/MM/DD'
+            }
+        });
+        $("#checkall").click(function () {
+            let checked = $("#checkall").prop('checked')
+            $("[name='checkCtx']").prop('checked', checked)
+        })
+        $("#submit").click(function () {
+            searchHost(1);
+        });
+        $('#hostTable').find('input[name="checkall"]').click(function () {
+            var checked = $(this).prop('checked');
+            $('#hostTable>tbody input').prop('checked', checked);
+        });
+        $('#hostTable').find(':checkbox').on('click', function () {
+            if (!this.checked) {
+                $('#hostTable').find('input[name="checkall"]').prop('checked', false);
+            }
+        });
+        $("#deptSelect").change(function () {
+            const params = { 'dept_id': $(this).val() }
+            $.ajax({
+                 url: site_url + 'searchDepartmentUser/',
+                 type: 'GET',
+                 data: params,
+                 success: function (res) {
+                    let _html = '';
+                    res.data.forEach((item, i) => {
+                        _html += "<option value="+ item.username +">"+ item.username +"</option>"
+                    })
+                    $('#ownerSelect').html(_html);
+                 }
+             });
+        })
+        $("#deptSelect").change()
+        $("#bindSubmit").click(function () {
+            const params = { 'host_ids': hostId, 'owner': $("#ownerSelect").val() }
+            $.ajax({
+                 url: site_url + 'hostBindOwner/',
+                 type: 'POST',
+                 data: params,
+                 beforeSend: function () {
+                     $('#bindSubmit').removeClass('is-loading is-disabled').addClass('is-loading disabled');
+                 },
+                 success: function (res) {
+                    $("#myModal").modal('hide')
+                    searchHost(curPage);
+                    alert("分配成功");
+                 },
+                 complete: function() {
+                    $('#bindSubmit').removeClass('is-loading disabled');
+                 }
+             });
+        });
+    })();
+    function searchHost(pageIndex) {
+        curPage = pageIndex
+        const params = {bk_biz_id: $("#searchBiz").val(), owner: $("#searchOwner").val(), create_time: $("#searchDate").val(), cur_page: pageIndex, per_page: perPage}
+        $.ajax({
+            url: site_url + 'getHosts/',
+            type: 'GET',
+            data: params,
+            beforeSend: function() {
+                $('#submit').removeClass('is-loading is-disabled').addClass('is-loading disabled');
+            },
+            success: function(res) {
+                let _hostHtml = '';
+                let _pageHtml = '';
+                if (res.total > 0) {
+                    res.data.forEach((item, i) => {
+                        _hostHtml += '<tr><td><input type="checkbox" name="checkCtx" onclick="isCheckAll()" data-host-id='+ item.bk_host_id +' data-owner='+ item.owner +'></td>'
+                        _hostHtml += '<td>' + item.bk_biz_id + '</td><td>' + item.bk_biz_name + '</td>' +  '<td>' + item.bk_host_name + '</td><td>' + item.bk_host_innerip + '</td>'
+                        if (item.owner) {
+                            _hostHtml += '<td>' + item.owner + '</td><td><a href="javascript:void(0);" class="king-btn king-btn-mini" onclick="unbind('+item.bk_host_id+');">解绑</a></td>'
+                        } else {
+                            _hostHtml += '<td>--</td><td><a href="javascript:void(0);" class="king-btn king-btn-mini" onclick="bind('+item.bk_host_id+');">分配</a></td>'
+                        }
+                        _hostHtml += '</tr>'
+                    })
+                    // 计算页码
+                    pageNumber = Math.ceil(res.total / perPage)
+                    _pageHtml += '<ul>'
+                    _pageHtml += '<li class="page-item"><a href="javascript:void(0);" onclick="goPrev()" class="page-button"><i class="bk-icon icon-angle-left"></i></a></li>'
+                    for (var i=0; i<pageNumber; i++) {
+                        if (i===pageIndex-1) {
+                            _pageHtml += '<li class="page-item cur-page"><a href="javascript:void(0);" onclick="searchHost('+ (i+1) +')" class="page-button">'+ (i+1) +'</a></li>'
+                        } else {
+                            _pageHtml += '<li class="page-item"><a href="javascript:void(0);" onclick="searchHost('+ (i+1) +')" class="page-button">'+ (i+1) +'</a></li>'
+                        }
+                    }
+                    _pageHtml += '<li class="page-item"><a href="javascript:void(0);" onclick="goNext()"  class="page-button"><i class="bk-icon icon-angle-right"></i></a></li>'
+                    _pageHtml += '</ul>'
+                } else {
+                    _hostHtml = '<tr><td colspan="7" align="center">暂无数据</td></tr>'
+                }
+                $("#hostBody").html(_hostHtml)
+                $("#pageBody").html(_pageHtml)
+                $("#checkall").attr('checked', false)
+            },
+            complete: function() {
+                $('#submit').removeClass('is-loading disabled');
+            }
+        });
+    }
+    function goPrev() {
+        if (curPage>1) {
+            searchHost(curPage-1)
+        }
+    }
+    function goNext() {
+        if (curPage<pageNumber) {
+            searchHost(curPage+1)
+        }
+    }
+    function bind(host_ids) {
+        hostId = host_ids
+        $("#myModal").modal()
+    }
+    function unbind(host_ids) {
+        if (confirm("确定解绑吗?")) {
+            params = {'host_ids': host_ids}
+             $.ajax({
+                 url: site_url + 'hostUnbindOwner/',
+                 type: 'POST',
+                 data: params,
+                 success: function (res) {
+                    alert("解绑成功");
+                    searchHost(curPage);
+                 }
+             });
+        }
+    }
+    function batchUnbind() {
+        let hostIds = []
+        let isValid = true
+        $("#hostBody").find('input[type="checkbox"]:checked').each(function () {
+            const owner = $(this).attr('data-owner')
+            console.log(owner)
+            if (!owner) {
+                isValid = false
+            }
+            hostIds.push($(this).attr('data-host-id'))
+        })
+        if (!isValid) {
+            alert('不能包含未分配的行')
+            return false
+        }
+        unbind(hostIds.join(','))
+    }
+    function batchBind() {
+        let hostIds = []
+        let isValid = true
+        $("#hostBody").find('input[type="checkbox"]:checked').each(function () {
+            const owner = $(this).attr('data-owner')
+            if (owner) {
+                isValid = false
+            }
+            hostIds.push($(this).attr('data-host-id'))
+        })
+        if (!isValid) {
+            alert('请先解绑已分配属主的行')
+            return false;
+        }
+        bind(hostIds.join(','))
+    }
+    function hostExport() {
+        window.location.href = site_url + 'hostExport/?bk_biz_id=' + $("#searchBiz").val() + "&owner=" + $("#searchOwner").val()
+    }
+    function isCheckAll() {
+        let checkedLength = $("[name='checkCtx']:checked").length
+        let checkLength = $("[name='checkCtx']").length
+        if (checkedLength === checkLength) {
+            $("#checkall").prop('checked', true)
+        } else {
+            $("#checkall").prop('checked', false)
+        }
+    }
+</script>
+
+</body>
+
+</html>

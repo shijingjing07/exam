@@ -1,0 +1,8 @@
+.env
+.idea/
+.project
+*.pyc
+*.pyo
+yv_*.iml
+*.pid
+ldap
